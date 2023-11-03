@@ -1,0 +1,73 @@
+# Define a Deployment object with API version "apps/v1"
+apiVersion: apps/v1
+kind: Deployment
+
+# Metadata section provides information about the Deployment
+metadata:
+  # Specify the name of the Deployment as "mongo-deployment"
+  name: mongo-deployment
+  
+  # Define labels for the Deployment
+  labels:
+    app: mongo
+
+# Spec section defines the desired state of the Deployment
+spec:
+  # Set the desired number of replicas to 1
+  replicas: 1
+
+  # Selector specifies the labels used for selecting Pods
+  selector:
+    matchLabels:
+      app: mongo
+
+  # Template defines the metadata and containers within the Pods
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      # Containers section defines the containers within the Pods
+      containers:
+      - name: mongodb
+        # Use the "mongo:7.0" Docker image for the container
+        image: mongo:7.0
+        # Expose port 27017 within the container
+        ports:
+        - containerPort: 27017
+        # Define environment variables from the "mongo-secret" Secret
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-password
+
+# Define a Service object with API version "v1"
+---
+apiVersion: v1
+kind: Service
+
+# Metadata section provides information about the Service
+metadata:
+  # Specify the name of the Service as "mongo-service"
+  name: mongo-service
+
+# Spec section defines the desired state of the Service
+spec:
+  # Selector specifies the labels used for selecting Pods
+  selector:
+    app: mongo
+
+  # Ports section defines the ports to expose on the Service
+  ports:
+    # Expose port 27017 on the Service
+    - protocol: TCP
+      port: 27017
+      # Forward traffic to port 27017 on the Pods
+      targetPort: 27017

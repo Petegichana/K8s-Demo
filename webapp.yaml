@@ -1,0 +1,83 @@
+# Define a Deployment object with API version "apps/v1"
+apiVersion: apps/v1
+kind: Deployment
+
+# Metadata section provides information about the Deployment
+metadata:
+  # Specify the name of the Deployment as "webapp-deployment"
+  name: webapp-deployment
+  
+  # Define labels for the Deployment
+  labels:
+    app: webapp
+
+# Spec section defines the desired state of the Deployment
+spec:
+  # Set the desired number of replicas to 1
+  replicas: 1
+
+  # Selector specifies the labels used for selecting Pods
+  selector:
+    matchLabels:
+      app: webapp
+
+  # Template defines the metadata and containers within the Pods
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      # Containers section defines the containers within the Pods
+      containers:
+      - name: webapp
+        # Use the "nanajanashia/k8s-demo-app:v1.0" Docker image for the container
+        image: nanajanashia/k8s-demo-app:v1.0
+        # Expose port 3000 within the container
+        ports:
+        - containerPort: 3000
+        # Define environment variables from the "mongo-secret" Secret and "mongo-config" ConfigMap
+        env:
+        - name: USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: USER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-password
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url
+
+# Define a Service object with API version "v1"
+---
+apiVersion: v1
+kind: Service
+
+# Metadata section provides information about the Service
+metadata:
+  # Specify the name of the Service as "webapp-service"
+  name: webapp-service
+
+# Spec section defines the desired state of the Service
+spec:
+  # Define the type of the Service as "NodePort"
+  type: NodePort
+
+  # Selector specifies the labels used for selecting Pods
+  selector:
+    app: webapp
+
+  # Ports section defines the ports to expose on the Service
+  ports:
+    # Expose port 3000 on the Service
+    - protocol: TCP
+      port: 3000
+      # Forward traffic to port 3000 on the Pods
+      targetPort: 3000
+      # Specify the NodePort value for external access
+      nodePort: 30100
